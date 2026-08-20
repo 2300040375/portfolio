@@ -105,6 +105,11 @@ module.exports = async function handler(req, res) {
     res.status(200).json({ message: 'Your message was sent successfully.' });
   } catch (error) {
     console.error('SMTP send error:', error);
-    res.status(500).json({ message: 'Failed to send the message. Please try again later.' });
+    const errorMessage = error && error.code === 'EAUTH'
+      ? 'Gmail rejected the SMTP credentials. Check SMTP_USER and SMTP_PASS in Vercel.'
+      : error && error.code === 'ECONNECTION'
+        ? 'The server could not connect to Gmail SMTP. Check SMTP_HOST and SMTP_PORT in Vercel.'
+        : 'The email service could not send this message. Check the Vercel function logs.';
+    res.status(500).json({ message: errorMessage });
   }
 };
