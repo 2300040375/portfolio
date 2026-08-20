@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const requiredKeys = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'SMTP_TO'];
+const requiredKeys = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
 
 async function getRequestBody(req) {
   if (req.body) {
@@ -68,9 +68,12 @@ module.exports = async function handler(req, res) {
   const missing = requiredKeys.filter((key) => !process.env[key] || !String(process.env[key]).trim());
   if (missing.length) {
     console.error('Missing SMTP config:', missing);
-    res.status(500).json({ message: 'SMTP configuration is missing on the server.' });
+    res.status(500).json({ message: `SMTP configuration is missing: ${missing.join(', ')}.` });
     return;
   }
+
+  const senderAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const recipientAddress = process.env.SMTP_TO || process.env.SMTP_USER;
 
   try {
     const transporter = nodemailer.createTransport({
@@ -84,8 +87,8 @@ module.exports = async function handler(req, res) {
     });
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to: process.env.SMTP_TO,
+      from: senderAddress,
+      to: recipientAddress,
       replyTo: body.emailAddress,
       subject: `Portfolio Contact: ${body.subject}`,
       text: `Name: ${body.fullName}\nEmail: ${body.emailAddress}\nSubject: ${body.subject}\n\nMessage:\n${body.message}`,
