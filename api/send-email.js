@@ -82,7 +82,7 @@ module.exports = async function handler(req, res) {
       secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: String(process.env.SMTP_PASS).replace(/\s+/g, ''),
       },
     });
 
